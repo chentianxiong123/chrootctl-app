@@ -1,0 +1,11 @@
+# Android 构建产物与本地配置 —— 不提交
+.gradle/
+build/
+.kotlin/
+local.properties
+.idea/
+*.iml
+.DS_Store
+/captures
+.externalNativeBuild
+.cxx
