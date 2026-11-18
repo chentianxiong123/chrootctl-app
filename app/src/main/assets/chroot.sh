@@ -16,6 +16,7 @@ mountpoint -q __ROOTFS__/dev     || mount --bind /dev  __ROOTFS__/dev
 mountpoint -q __ROOTFS__/proc    || mount --bind /proc __ROOTFS__/proc
 mountpoint -q __ROOTFS__/sys     || mount --bind /sys  __ROOTFS__/sys
 mountpoint -q __ROOTFS__/dev/pts || mount -t devpts devpts __ROOTFS__/dev/pts
+mountpoint -q __ROOTFS__/tmp || mount -t tmpfs -o size=512M tmpfs __ROOTFS__/tmp
 echo "挂载就绪"
 setsid chroot __ROOTFS__ /bin/sh -c 'export PATH=/usr/sbin:/usr/bin:/sbin:/bin; mkdir -p /run/sshd; exec /usr/sbin/sshd -D -p __PORT__' </dev/null >/dev/null 2>&1 &
 sleep 2
