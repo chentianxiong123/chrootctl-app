@@ -5,6 +5,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.ScrollView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import java.io.File
 import kotlin.concurrent.thread
@@ -40,8 +41,13 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnSsh).setOnClickListener { runSshTest() }
         findViewById<Button>(R.id.btnClear).setOnClickListener {
             tvOutput.text = ""
+            try {
+                File(getExternalFilesDir(null), "chrootctl.log").writeText("")
+            } catch (_: Exception) {}
+            Toast.makeText(this, "日志已清空", Toast.LENGTH_SHORT).show()
         }
 
+        loadLogToView()
         append("ChrootCtl 就绪")
         thread { runRoot("id -u") { append("su 测试: uid=$it") } }
     }
@@ -81,6 +87,20 @@ class MainActivity : AppCompatActivity() {
         } catch (e: Exception) {
             cb("[异常] ${e.message}")
         }
+    }
+
+    // 启动时加载持久化日志到输出框(重启不丢)
+    private fun loadLogToView() {
+        try {
+            val f = File(getExternalFilesDir(null), "chrootctl.log")
+            if (f.exists()) {
+                val content = f.readText().trim()
+                if (content.isNotBlank()) {
+                    tvOutput.text = content
+                    scroll.post { scroll.fullScroll(android.view.View.FOCUS_DOWN) }
+                }
+            }
+        } catch (_: Exception) {}
     }
 
     private fun append(s: String) {
