@@ -15,7 +15,8 @@ PID=$(ss -tlnp 2>/dev/null | grep ":__PORT__" | grep -oE 'pid=[0-9]+' | head -1 
 mountpoint -q __ROOTFS__/dev     || mount --bind /dev  __ROOTFS__/dev
 mountpoint -q __ROOTFS__/proc    || mount --bind /proc __ROOTFS__/proc
 mountpoint -q __ROOTFS__/sys     || mount --bind /sys  __ROOTFS__/sys
-mountpoint -q __ROOTFS__/dev/pts || mount -t devpts devpts __ROOTFS__/dev/pts
+mkdir -p __ROOTFS__/dev/pts
+mountpoint -q __ROOTFS__/dev/pts 2>/dev/null || mount -t devpts devpts __ROOTFS__/dev/pts
 mountpoint -q __ROOTFS__/tmp || mount -t tmpfs -o size=512M tmpfs __ROOTFS__/tmp
 echo "挂载就绪"
 # 记录 sshd PID: chroot 内 sh 把自身 PID 写入 /.chrootctl.pid(宿主机视角即 __ROOTFS__/.chrootctl.pid),
@@ -66,7 +67,8 @@ ALIVE=0
 [ -n "$PID" ] && kill -0 "$PID" 2>/dev/null && ALIVE=1
 M=0
 for mp in dev proc sys dev/pts tmp; do
-  mountpoint -q __ROOTFS__/$mp && M=$((M+1))
+  # dev/pts 在未 start 时可能不存在(proot-distro 原始 dev 为空), 先判存在避免 mountpoint 报错
+  [ -e __ROOTFS__/$mp ] && mountpoint -q __ROOTFS__/$mp 2>/dev/null && M=$((M+1))
 done
 P=$(ss -tln | grep -c ":__PORT__ ")
 echo "挂载=$M/5 __PORT__监听=$P sshd(PID=$PID)存活=$ALIVE"
